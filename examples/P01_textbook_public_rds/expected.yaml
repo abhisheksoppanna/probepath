@@ -1,0 +1,3 @@
+description: textbook pivot — internet -> public EC2 (SSH) -> private RDS (Postgres)
+sinks:
+  aws_db_instance.main: reachable

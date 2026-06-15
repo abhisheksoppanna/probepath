@@ -1,0 +1,3 @@
+description: web ingress CIDR is computed (known-after-apply) -> conservatively kept visible
+sinks:
+  aws_db_instance.main: potentially_reachable

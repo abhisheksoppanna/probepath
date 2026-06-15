@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "probepath"
+version = "0.1.0"
+description = "Prove whether an internet-to-database attack path actually exists in your Terraform — before you apply."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Abhishek Soppanna", email = "abhisheksoppanna@gmail.com" }]
+keywords = ["terraform", "aws", "security", "reachability", "iac", "devsecops", "attack-path"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "networkx>=3.1",
+    "typer>=0.12",
+    "rich>=13",
+    "python-hcl2>=4",
+]
+
+[project.urls]
+Homepage = "https://github.com/abhisheksoppanna/probepath"
+Repository = "https://github.com/abhisheksoppanna/probepath"
+
+[project.optional-dependencies]
+viz = ["pydot>=2"]
+dev = [
+    "pytest>=7",
+    "pytest-cov>=4",
+    "hypothesis>=6",
+    "mypy>=1.8",
+    "ruff>=0.4",
+    "pyyaml>=6",
+    "types-PyYAML",
+]
+
+[project.scripts]
+probepath = "probepath.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/probepath"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4", "SIM", "RUF"]
+ignore = ["E501"]  # line length handled by formatter; long rationale strings are fine
+
+[tool.ruff.lint.per-file-ignores]
+# Typer requires Option/Argument calls in parameter defaults — B008 is a false positive here.
+"src/probepath/cli.py" = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+files = ["src/probepath"]
+# networkx ships no stubs; treat as untyped without failing the strict gate
+[[tool.mypy.overrides]]
+module = ["networkx.*", "hcl2.*", "pydot.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "critical: false-negative-class invariants; failure is release-blocking",
+]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

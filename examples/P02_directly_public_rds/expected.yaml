@@ -1,0 +1,3 @@
+description: database directly on the internet (publicly_accessible + public subnet + open SG)
+sinks:
+  aws_db_instance.main: reachable

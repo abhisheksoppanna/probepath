@@ -1,0 +1,10 @@
+description: realistic stack — only the genuinely internet-reachable sinks light up
+sinks:
+  aws_db_instance.orders: reachable
+  aws_s3_bucket.exports: reachable
+  # legacy DB sits in a private subnet but its SG is open to 0.0.0.0/0, so the compromised
+  # public web host pivots straight to it — "private subnet" is not a control. A real catch.
+  aws_db_instance.legacy: reachable
+  aws_elasticache_cluster.sessions: unreachable
+  aws_redshift_cluster.warehouse: unreachable
+  aws_s3_bucket.secrets: unreachable

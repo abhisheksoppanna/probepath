@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint (ruff)
+        run: ruff check src tests
+      - name: Type-check (mypy)
+        run: mypy src/probepath
+      - name: Test
+        run: pytest -q --cov=probepath --cov-report=term-missing
+
+  dogfood:
+    # Prove the gate end-to-end: a clean stack passes, an exposed stack fails.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Clean stack passes the gate (exit 0)
+        run: probepath scan examples/N01_private_subnet_suppressed/plan.tfplan.json --fail-on reachable
+      - name: Exposed stack freezes the deploy (exit 1)
+        run: |
+          if probepath scan examples/demo_corp_stack/plan.tfplan.json --fail-on reachable; then
+            echo "::error::expected probepath to fail on a reachable internet→database path"; exit 1
+          else
+            echo "probepath correctly froze the deploy (exit 1)"
+          fi

@@ -1,0 +1,59 @@
+name: "probepath"
+description: "Prove whether a Terraform change introduces an internet→database attack path, before apply."
+branding:
+  icon: "shield"
+  color: "red"
+
+inputs:
+  plan:
+    description: "Path to Terraform plan JSON (terraform show -json plan.out > plan.json)."
+    required: true
+  fail-on:
+    description: "Fail the check on reachable | potential | never."
+    required: false
+    default: "reachable"
+  baseline:
+    description: "Optional base-ref probepath JSON report; when set, gate only on NEWLY-introduced paths."
+    required: false
+    default: ""
+  sarif:
+    description: "Path to write SARIF for code-scanning upload."
+    required: false
+    default: "probepath.sarif"
+  upload-sarif:
+    description: "Upload the SARIF to GitHub code scanning."
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install probepath
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+
+    - name: probepath scan → SARIF
+      shell: bash
+      env:
+        PLAN: ${{ inputs.plan }}
+        SARIF: ${{ inputs.sarif }}
+      run: probepath scan "$PLAN" --format sarif -o "$SARIF" || true
+
+    - name: Upload SARIF
+      if: ${{ inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif }}
+      continue-on-error: true
+
+    - name: probepath gate
+      shell: bash
+      env:
+        PLAN: ${{ inputs.plan }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        BASELINE: ${{ inputs.baseline }}
+      run: |
+        probepath scan "$PLAN"        # human summary in the log
+        ARGS=( "$PLAN" --fail-on "$FAIL_ON" )
+        if [ -n "$BASELINE" ]; then ARGS+=( --baseline "$BASELINE" ); fi
+        probepath scan "${ARGS[@]}"
