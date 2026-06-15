@@ -114,9 +114,8 @@ and (fatally) concludes "no path." probepath resolves topology from the plan's s
 ## Install
 
 ```bash
-pipx install probepath          # once published
-# or, from source:
-pip install git+https://github.com/abhisheksoppanna/probepath
+pipx install "git+https://github.com/abhisheksoppanna/probepath@v0.1.0"
+# (PyPI release — `pipx install probepath` — coming soon)
 ```
 
 Runtime dependencies: four pure‑Python packages (`networkx`, `typer`, `rich`, `python-hcl2`).
@@ -147,7 +146,7 @@ are unevaluated, so it over‑reports rather than risk a false negative). Plan J
 - run: |
     terraform plan -out plan.out
     terraform show -json plan.out > plan.tfplan.json
-- uses: abhisheksoppanna/probepath@v1
+- uses: abhisheksoppanna/probepath@v0.1.0
   with:
     plan: plan.tfplan.json
     fail-on: reachable        # freeze the deploy on any internet→sink path
